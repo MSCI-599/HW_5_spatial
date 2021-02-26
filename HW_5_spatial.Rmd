@@ -1,0 +1,105 @@
+---
+title: "HW 5: Spatial"
+author: "MSCI 599"
+date: "2/30/2021"
+output: html_document
+---
+
+***
+
+```{r setup, include=FALSE}
+# Put any RMarkdown options you'd like to have throughout the document here
+# These are the options I like to use to make figures smaller and print code output right below the command:
+knitr::opts_chunk$set(fig.width=6, fig.asp = 0.618, collapse=TRUE) 
+```
+
+#### Unit 5: Spatial
+
+#### Skill practice: rasters, map making
+
+***
+
+### Gray's Reef
+
+Gray's Reef is a rocky reef (or "live bottom reef") off the coast of Georgia at a depth of about 20m. It was designated a National Marine Sanctuary in 1981. This reef hosts high densities of sponges, corals and sea squirts. As a National Marine Sanctuary, Gray's Reef is an actively managed habitat. There is federal support for ecological monitoring (water quality sampling, biological surveys, debris surveys), regulations (prohibiting disruption of the seafloor, such as anchors and buoys), education, outreach and intervention (removal of invasive species like lionfish and green mussels).
+
+### NASA satellite chlorophyll raster data
+
+For this homework, you will download one year of monthly chlorophyll a data from NASA Ocean Biology Processing Group collected by the MODIS Aqua program. This is 12 files corresponding to 1) January 2020, 2) February 2020 ... 12) December 2020. 
+
+To access the data from the OBPG, you'll need to have a NASA Earth Data Login profile: 
+https://urs.earthdata.nasa.gov/
+
+Go to the Ocean Data Access Portal:
+https://oceandata.sci.gsfc.nasa.gov/
+
+Grab Modis Aqua L3 Mapped data that provides monthly means of chlorophyll a. So from the Ocean Data Access Portal, click through the directories: 
+
+`MODIS-Aqua -> Mapped -> Monthly -> 9_km -> chlor_a`
+
+You'll see a list of files with names such as `A20200012020031.L3m_MO_CHL_chlor_a_9km.nc`
+
+Let's dismantle the file naming convention here: 
+
+`A`: Satellite sensor (A for the Modis Aqua mission)
+`2020`: start year
+`001`: start Julian date (first day of January)
+`2020`: end year
+`031`: end Julian date (last day of January)
+`.L3m`: Level 3 monthly 
+`MO`: Monthly mean
+`CHL`: Chlorophyll suite of products
+`chlor_a`: The specific chlorophyll product (distinct from chlor_ocx which is a legacy algorithm)
+`9km`: resolution; the length of the side of one grid cell
+`.nc`: netCDF file type
+
+You'll download this file corresponding to January 2020, as well as the files corresponding to every other month in 2020 for a total of 12 netCDF files. Note that we are using the lower resolution data (9km) to save your harddrive space, but if you were publishing a paper on Gray's Reef, you'd probably choose the 4km data instead.
+
+### NOAA Gray's reef boundary shapefile
+
+You will also download the Gray's Reef boundary shapefiles from NOAA's National Marine Sanctuaries website.
+
+https://sanctuaries.noaa.gov/library/imast_gis.html
+
+Next to "Gray's Reef Boundary Polygon" the data link says `24 KB Zipped File`. You'll have to unzip it to get your shapefiles.
+
+### Tasks
+
+1. Download and read in 12 months of raster chlorophyll data
+
+Hint: Download all 12 netCDF files to a directory within your `data/` directory. I called my satellite data folder "modis_aqua". You can use the `list.files()` function in base R to read the names of the 12 netCDF files in the folder and save it to a character vector. Then if you pass the vector of filenames to the `raster::stack()` function, you can read all 12 files into a neat raster stack. Here is my code for this:
+
+```{r, eval=FALSE}
+files = list.files("data/modis_aqua",full.names=TRUE) # read in file names
+chl_stack = raster::stack(files) # build raster stack
+```
+
+Then you can use the `names()` function to rename the 12 layers in your stack. Remember R has 2 built-in character vectors listing the months of the year: `month.abb` and `month.name` that you may find useful. You can access a single layer of your raster stack with double square brackets like this:
+
+```{r, eval=FALSE}
+chl_stack[[10]] # the 10th layer corresponds to October data (the 10th month)
+```
+
+2. Download and read in Gray's Reef boundary shapefiles
+
+3. Convert the chlorophyll raster to a data frame and use ggplot to map chlorophyll for the month of May. Add in the World high resolution coastline data from R's `mapdata` library. Also plot the boundary of Gray's Reef on the same map. Crop the map so that we can see some of the Georgia coastline as well as the Gray's Reef boundaries. Save the map to the `figures/` directory in your repo.
+
+Hint: Use the reverse rainbow color palette and plot the log10() of chlorophyll like we did in class, but check the histogram of your May chlorophyll data in your cropped chlorophyll map to set good scale limits in your `scale_fill_gradientn()`
+
+4. Create a cropped raster stack with boundaries defined by the Gray's Reef polygon. 
+
+Hint: This is just like the raster cropping we did in class with `raster::crop()`, but instead of passing it the `extent()` function with a list of lat/lon coordinates, you'll pass it the `extent()` function with the Gray's Reef boundary simple feature (exactly as you read it in from the shapefiles). 
+
+5. Convert the cropped raster to a data frame and use `dplyr` tools to take the mean of all of the chlorophyll pixels inside the Gray's Reef polygon for each month and plot the monthly time series of chlorophyll a over the year. Save the plot to the `figures/` directory. You'll need to use `pivot_longer()` (covered in Unit 4) to convert your columns of monthly averages to rows of monthly averages.
+
+Hint: If you downloaded the 9km resolution data, there is only one chlorophyll pixel inside of your Gray's Reef polygon, so taking the mean of the pixels is not really unnecessary. It may be worth it to code this in anyways so that you can practice aggregating all of the spatial chlorophyll data in your region of interest (since typically you'd have more than one pixel). If you `pivot_longer()` your monthly data into 2 columns, then you'll `group_by()` the month name and `summarize()` the chlorophyll values with the mean column. Or, you can FIRST use `summarize_all()` to calculate the mean of each month column and THEN use `pivot_longer()` to stack the 12 monthly columns into 12 rows.
+
+***
+
+**Question 1:** What data are you using and how was it collected?
+
+**Question 2:** What does the chlorophyll time series reveal? When is the spring phytoplankton bloom? Did you catch the spring bloom in your map of the May chlorophyll? Is there a fall bloom?
+
+**Question 3:** If your thesis project focused on impacts of climate change on Gray's Reef, you could download daily Modis Aqua data starting in 2002 and examine the timing of the spring bloom over the past 2 decades. Just brainstorm a sentence or two about what you might find in that study.
+
+***
