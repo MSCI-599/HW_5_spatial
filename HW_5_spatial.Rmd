@@ -88,7 +88,7 @@ Hint: Use the reverse rainbow color palette and plot the log10() of chlorophyll 
 
 4. Create a cropped raster stack with boundaries defined by the Gray's Reef polygon. 
 
-Hint: This is just like the raster cropping we did in class with `raster::crop()`, but instead of passing it the `extent()` function with a list of lat/lon coordinates, you'll pass it the `extent()` function with the Gray's Reef boundary simple feature (exactly as you read it in from the shapefiles). 
+Hint: This is just like the raster cropping we did in class with `raster::crop()`, but instead of passing it the `extent()` function with a list of lat/lon coordinates, you'll pass it the `extent()` function containing the Gray's Reef boundary simple feature object (exactly as you read it in from the shapefiles). 
 
 5. Convert the cropped raster to a data frame and use `dplyr` tools to take the mean of all of the chlorophyll pixels inside the Gray's Reef polygon for each month and plot the monthly time series of chlorophyll a over the year. Save the plot to the `figures/` directory. You'll need to use `pivot_longer()` (covered in Unit 4) to convert your columns of monthly averages to rows of monthly averages.
 
